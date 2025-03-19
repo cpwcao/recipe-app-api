@@ -14,6 +14,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Set up Docker & Install Docker Compose  # ✅ Ensure Docker Compose is installed
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2  
         with:
@@ -23,11 +28,17 @@ jobs:
       - name: Build Docker image
         run: docker-compose build 
 
+      - name: Start Docker containers 
+        run: docker-compose up -d  
+
       - name: Install dependencies  
-        run: docker-compose run --rm app sh -c "pip install -r requirements.txt"
+        run: docker-compose exec -T app pip install -r requirements.txt  
+
+      - name: Run migrations  
+        run: docker-compose exec -T app python manage.py migrate
 
       - name: Run tests
-        run: docker-compose run --rm app sh -c "python manage.py test"
+        run: docker-compose exec -T app python manage.py test
 
       - name: Run linting
-        run: docker-compose run --rm app sh -c "flake8"
+        run: docker-compose exec -T app flake8
