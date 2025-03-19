@@ -22,6 +22,12 @@ jobs:
       - name: Build Docker image
         run: docker compose build 
 
+      - name: Ensure database file exists
+        run: |
+          mkdir -p ./data
+          touch ./data/db.sqlite3
+          chmod 777 ./data/db.sqlite3
+      
       - name: Run migrations  
         run: docker compose run --rm app python manage.py migrate
 
