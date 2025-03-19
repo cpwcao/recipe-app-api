@@ -26,19 +26,19 @@ jobs:
           password: ${{ secrets.DOCKERTOKEN }}
 
       - name: Build Docker image
-        run: docker-compose build 
+        run: docker compose build 
 
       - name: Start Docker containers 
-        run: docker-compose up -d  
+        run: docker compose up -d  
 
       - name: Install dependencies  
-        run: docker-compose exec -T app pip install -r requirements.txt  
+        run: docker compose exec -T app pip install -r requirements.txt  
 
       - name: Run migrations  
-        run: docker-compose exec -T app python manage.py migrate
+        run: docker compose exec -T app python manage.py migrate
 
       - name: Run tests
-        run: docker-compose exec -T app python manage.py test
+        run: docker compose exec -T app python manage.py test
 
       - name: Run linting
-        run: docker-compose exec -T app flake8
+        run: docker compose exec -T app flake8
