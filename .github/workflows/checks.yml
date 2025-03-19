@@ -1,5 +1,7 @@
 ---
 name: Checks
+- name: Install dependencies
+  run: pip install -r requirements.txt
 
 on:
   push:
