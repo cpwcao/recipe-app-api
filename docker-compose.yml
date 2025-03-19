@@ -8,8 +8,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app
-      - ./data/db.sqlite3:/app/db.sqlite3
+      - ./app/data:/app/data 
     command: >
       sh -c "pip install -r requirements.txt && python manage.py runserver 0.0.0.0:8000"
 
