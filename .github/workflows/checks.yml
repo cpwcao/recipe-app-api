@@ -1,4 +1,3 @@
----
 name: Checks
 
 on:
@@ -14,11 +13,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Set up Docker & Install Docker Compose  
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v2  
         with:
@@ -28,17 +22,14 @@ jobs:
       - name: Build Docker image
         run: docker compose build 
 
-      - name: Start Docker containers 
-        run: docker compose up -d  
+      - name: Run migrations  
+        run: docker compose run --rm app python manage.py migrate
 
       - name: Install dependencies  
-        run: docker compose exec -T app pip install -r requirements.txt  
-
-      - name: Run migrations  
-        run: docker compose exec -T app python manage.py migrate
+        run: docker compose run --rm app pip install -r requirements.txt  
 
       - name: Run tests
-        run: docker compose exec -T app python manage.py test
+        run: docker compose run --rm app python manage.py test
 
       - name: Run linting
-        run: docker compose exec -T app flake8
+        run: docker compose run --rm app flake8
