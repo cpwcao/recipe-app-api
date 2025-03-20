@@ -33,13 +33,13 @@ jobs:
           sudo chown -R $USER:$USER ./app/data
       
       - name: Run migrations  
-        run: docker compose run --rm app python manage.py migrate
-
+        run: docker compose run --rm app sh -c "python manage.py wait_for_db && python manage.py migrate"
+        
       - name: Install dependencies  
         run: docker compose run --rm app pip install -r ./requirements.txt  
 
       - name: Run tests
-        run: docker compose run --rm app python manage.py test
+        run: docker compose run --rm app sh -c "python manage.py wait_for_db && python manage.py test"
 
       # - name: Run linting
       #   run: docker compose run --rm app flake8
