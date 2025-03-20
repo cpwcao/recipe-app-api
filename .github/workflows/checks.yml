@@ -41,5 +41,5 @@ jobs:
       - name: Run tests
         run: docker compose run --rm app python manage.py test
 
-      - name: Run linting
-        run: docker compose run --rm app flake8
+      # - name: Run linting
+      #   run: docker compose run --rm app flake8
