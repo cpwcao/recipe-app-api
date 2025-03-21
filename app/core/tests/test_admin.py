@@ -16,7 +16,15 @@ class AdminSiteTests(TestCase):
             email='admin@example.com',
             password='password123'
         )
-        self.client.force_login(self.admin_user)        
+        self.client.force_login(self.admin_user)   
+        self.user = get_user_model().objects.create_user(
+            email='user@example.com',
+            password='password123',
+            name='Test User',
+            username='testuser',
+            first_name='Test',
+            last_name='User'
+        )
         
     def test_users_listed(self):
         """Test that users are listed on user page."""
@@ -33,12 +41,18 @@ class AdminSiteTests(TestCase):
         
         self.assertEqual(res.status_code, 200)
     
-    def test_change_user_page(self):
+    def test_edit_user_page(self):
         """Test that the user edit page works."""
         url = reverse('admin:core_user_change', args=[self.user.id])
         res = self.client.get(url)
         
         self.assertEqual(res.status_code, 200)
-            
+    
+    def test_create_user_page(self):
+        """Test that the create user page works."""
+        url = reverse('admin:core_user_add')
+        res = self.client.get(url)
+        
+        self.assertEqual(res.status_code, 200)
         
 
