@@ -22,15 +22,15 @@ jobs:
       - name: Build Docker image
         run: docker compose build 
 
-      - name: Ensure database directory exists
-        run: |
-          mkdir -p ./app/data
-          touch ./app/data/db.sqlite3
+      # - name: Ensure database directory exists
+      #   run: |
+      #     mkdir -p ./app/data
+      #     touch ./app/data/db.sqlite3
 
-      - name: Fix database permissions
-        run: |
-          sudo chmod -R 777 ./app/data
-          sudo chown -R $USER:$USER ./app/data
+      # - name: Fix database permissions
+      #   run: |
+      #     sudo chmod -R 777 ./app/data
+      #     sudo chown -R $USER:$USER ./app/data
       
       - name: Run migrations  
         run: docker compose run --rm app sh -c "python manage.py wait_for_db && python manage.py migrate"
