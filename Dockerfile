@@ -28,3 +28,6 @@ RUN python -m venv /py && \
 ENV PATH="/py/bin:$PATH"
 
 USER django_user
+
+# Command to install dependencies when needed
+CMD ["/bin/sh", "-c", "pip install -r /tmp/requirements.txt && gunicorn app.wsgi:application --bind 0.0.0.0:8000"]
