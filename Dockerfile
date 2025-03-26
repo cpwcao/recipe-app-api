@@ -9,10 +9,9 @@ COPY ./app/requirements.dev.txt /tmp/requirements.dev.txt
 COPY ./app /app
 WORKDIR /app
 EXPOSE 8000
-
+RUN chmod 777 /app/wait-for-db.sh 
 RUN python -m venv /py && \
-    /py/bin/pip install --upgrade pip && \
-    chmod +777 /app/wait-for-db.sh && \
+    /py/bin/pip install --upgrade pip && \ 
     apk add --update  postgresql-client && \
     apk add --update  --virtual .tmp-build-deps \
     # apk add --update --no-cache postgresql-client && \
