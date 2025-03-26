@@ -1,13 +1,16 @@
 from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.views import APIView
+from django.contrib.auth import authenticate, login, logout
+
 from rest_framework.settings import api_settings
 from rest_framework.response import Response
 from rest_framework import status
 from core.models import User
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authtoken.models import Token
-
+from rest_framework.authentication import TokenAuthentication
 from user.api.serializers import UserSerializer, AuthTokenSerializer
 
 # Create your views here.
@@ -30,14 +33,44 @@ class CreateTokenView(ObtainAuthToken):
 class ManageUserView(generics.RetrieveUpdateAPIView):
     """Manage the authenticated user"""
     serializer_class = UserSerializer
+    authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     queryset = User.objects.all()
     def get_object(self):
         return self.request.user
-    
-def user_delete(request):
+class UserDeleteView(generics.DestroyAPIView):
     """Delete the authenticated user"""
-    user = request.user
-    user.delete()
-    return Response({'message': 'User deleted successfully'}, status=status.HTTP_200_OK)
+    serializer_class = UserSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    queryset = User.objects.all()
+    def get_object(self):
+        return self.request.user
+    def delete(self, request, *args, **kwargs):
+        user = self.get_object()
+        user.delete()
+        return Response({'message': 'User deleted successfully'}, status=status.HTTP_200_OK)
 
+class LoginView(APIView):
+    permission_classes = [AllowAny]  # Allow anyone to access
+    serializer_class = UserSerializer
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        user = authenticate(username=username, password=password)
+        if user:
+            # Generate or get existing token
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({"token": token.key, "message": "Login successful"})
+        
+        return Response({"error": "Invalid credentials"}, status=400)
+    
+class LogoutView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = UserSerializer
+    def post(self, request):
+        logout(request)
+        return Response({"message": "Logout successful"})
+    
+    
