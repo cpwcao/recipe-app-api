@@ -12,6 +12,7 @@ EXPOSE 8000
 
 RUN python -m venv /py && \
     /py/bin/pip install --upgrade pip && \
+    chmod +777 /app/wait-for-db.sh && \
     apk add --update  postgresql-client && \
     apk add --update  --virtual .tmp-build-deps \
     # apk add --update --no-cache postgresql-client && \
