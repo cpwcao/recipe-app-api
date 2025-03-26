@@ -5,7 +5,8 @@ from rest_framework import serializers
 
 from core.models import Recipe, Tag, Ingredient
 
-
+class MySerializer(serializers.Serializer):
+    my_field = serializers.BooleanField(allow_null=True, required=False)
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
