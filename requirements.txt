@@ -3,5 +3,5 @@ djangorestframework>=3.12,<3.13
 # flake8
 postgres
 psycopg2-binary>=2.9.1
-drf-spectacular>=0.21.0,<0.22.0
+drf-spectacular>=0.15.1,<0.16.0
 httpcore>=1.0.7,<1.1.0
