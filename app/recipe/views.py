@@ -22,6 +22,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
     
+    def perform_update(self, serializer):
+        """Override update to ensure update works properly"""
+        serializer.save()
+        
     def get_queryset(self):
         """Retrieve recipes for the authenticated user"""
         return self.queryset.filter(user=self.request.user).order_by('-id')

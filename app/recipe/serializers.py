@@ -56,7 +56,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = ['id', 'title', 'description', 'time_minutes', 'price', 'link', 'ingredients', 
                   'tags', 'ingredient_names', 'tag_names','image']
-        read_only_fields = ['id','user']
+        read_only_fields = ['id']
     
     def create(self, validated_data):
         """Create and return a recipe."""
@@ -69,13 +69,17 @@ class RecipeSerializer(serializers.ModelSerializer):
         return recipe
     
     def update(self, instance, validated_data):
+
         """Update a recipe, setting the ingredients correctly and return it"""
         ingredients = validated_data.pop('ingredients', [])
         tags = validated_data.pop('tags', [])
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value) 
         instance.ingredients.set(ingredients)
         instance.tags.set(tags)
         instance.save()  # Save the instance before returning it to ensure the foreign key relationships are updated
-
+        
         return instance  # Return the updated instance  to the  database    
          
     
