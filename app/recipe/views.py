@@ -55,7 +55,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-class RecipeDetail(RetrieveAPIView):
+# class RecipeDetail(RetrieveAPIView):
+class RecipeDetail(generics.RetrieveUpdateAPIView):
     """Retrieve a recipe by ID"""
     queryset = Recipe.objects.all()
     serializer_class = RecipeDetailSerializer
@@ -68,7 +69,7 @@ class RecipeDetail(RetrieveAPIView):
         """Filter recipes by the authenticated user"""
         return self.queryset.filter(user=self.request.user)
     
-    def perform_update(self, serializer):
+    def perform_update(self, serializer): 
         serializer.save(user=self.request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
