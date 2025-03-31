@@ -10,10 +10,12 @@ from rest_framework import status
 from rest_framework.test import APIClient 
 from rest_framework.response import Response
 from core.models import Recipe, Tag, Ingredient
-from core.models import User
-
+from core.models import User,recipe_image_file_path
+from unittest.mock import patch
 from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
-
+from PIL import Image
+import os
+import tempfile
 RECIPE_URL = reverse('recipe:recipe-list')
 
 
@@ -25,6 +27,10 @@ def detail_url(recipe_id):
     """Return recipe detail URL."""
     return reverse('recipe:recipe-detail', args=[recipe_id])
 
+def image_upload_url(recipe_id):
+    """Return image upload URL."""
+    return reverse('recipe:recipe-upload-image', args=[recipe_id])
+
 def create_recipe(user, **params):
     """Create and return a sample recipe."""
     defaults = {
@@ -32,7 +38,7 @@ def create_recipe(user, **params):
         'time_minutes': 22,
         'price': Decimal('5.25'),
         'description': 'Sample description',
-        'link': 'http://example.com/recipe.pdf',
+        'link': 'http://example.com/recipe.pdf'  
     } 
     defaults.update(params)
 
@@ -196,3 +202,50 @@ class PrivateRecipeApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
         self.assertTrue(Recipe.objects.filter(id=recipe.id).exists())
+
+
+    @patch('core.models.uuid.uuid4')
+    def test_recipe_file_name_uuid(self, req):
+        """Test that recipe image filename is unique""" 
+        filename = 'test.jpg'
+        
+        req.return_value = 'test'
+        self.assertEqual(recipe_image_file_path(None,filename), 
+                         f'uploads/recipe/{filename}')
+        
+class ImageUploadTestCase(TestCase):
+    """Test recipe image upload."""
+    def setUp(self):
+        self.client = APIClient()
+        self.user = create_user(email='user3@example.com', password='testpass123')
+        self.client.force_authenticate(self.user)
+        self.recipe = create_recipe(user=self.user)
+
+    def tearDown(self):
+        self.recipe.image.delete()
+
+    def test_upload_image(self):
+        """Test uploading an image to a recipe."""
+        url = reverse('recipe:recipe-upload-image', args=[self.recipe.id])
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as image_file:
+            img = Image.new('RGB',(10,10))
+            img.save(image_file, format='JPEG')
+            image_file.seek(0)
+            payload = {'image': image_file}
+            res = self.client.post(url, payload,format='multipart')
+
+        self.recipe.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertTrue(os.path.exists(self.recipe.image.path))
+        self.assertIn('image',res.data)
+
+    def test_upload_image_not_image(self):
+        """Test uploading a non-image file to a recipe."""
+        url = reverse('recipe:recipe-upload-image', args=[self.recipe.id])
+        with tempfile.NamedTemporaryFile(suffix='.txt') as text_file:
+            text_file.write(b'Not an image')
+            text_file.seek(0)
+            payload = {'image': text_file}
+            res = self.client.post(url, payload, format='multipart')
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        

@@ -7,7 +7,16 @@ from django.conf import settings
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
+ 
 # Create your models here.
+
+import uuid
+import os
+def recipe_image_file_path(instance,filename):
+    """Generate file path for recipe images."""
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+    return os.path.join('uploads/recipe/', filename)
 
 
 class UserManager(BaseUserManager):
@@ -65,8 +74,9 @@ class Recipe(models.Model):
     description = models.TextField(blank=True)
     time_minutes = models.IntegerField()
     price = models.DecimalField(max_digits=5, decimal_places=2)
-    link = models.CharField(max_length=255, blank=True)
-
+    link = models.CharField(max_length=255, blank=True) 
+    image = models.ImageField(null=True,upload_to=recipe_image_file_path)
+    # attachments = models.FileField(upload_to=recipe_image_file_path)
     def create(self, serializer):
         """Create a new recipe."""
         serializer.save(user=self.request.user)

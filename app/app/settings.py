@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'core',
     'rest_framework',
     'drf_spectacular',
+    # 'drf_spectacular_sidecar',
     'user',
     'rest_framework.authtoken',
     'recipe',
@@ -86,7 +87,7 @@ DATABASES = {
         'NAME': os.environ.get('DB_NAME', 'recipe_db'),
         'USER': os.environ.get('DB_USER', 'postgres'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'HOST': os.environ.get('DB_HOST', 'db'),
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
@@ -128,7 +129,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = '/static/static/'
+MEDIA_URL = '/static/media/'
+MEDIA_ROOT ='/vol/web/media'
+STATIC_ROOT ='/vol/web/static'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -145,4 +149,17 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
     ],
 }
- 
+
+SPECTACULAR_SETTINGS =  {
+    'TITLE': 'Recipe API',
+    'DESCRIPTION': 'API for managing recipes',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SERVE_URL_PREFIX': '/schema/',
+    'SWAGGER_URL_PREFIX': '/swagger/',
+    'REDOC_URL_PREFIX': '/redoc/',
+    'COMPONENT_SPLIT_REQUEST':True,
+    # 'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
+    # 'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    # 'REDOC_DIST': 'SIDECAR',
+} 

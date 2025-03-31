@@ -4,17 +4,18 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - DEV=True
+        - DEV=False
     depends_on:
       db:
         condition: service_healthy   
     volumes:
       - ./app:/app
+      - dev-static-data:/vol/web
     command: >
-      sh -c "until pg_isready -h db -p 5432; do sleep 2; done &&
-             python manage.py wait_for_db &&
+      sh -c "until pg_isready -h db -p 5432; do sleep 2; done && 
              python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
+    #python manage.py wait_for_db &&
     ports:
       - "8000:8000" 
     environment:
@@ -45,5 +46,4 @@ services:
 
 volumes:
   dev-db-data:
-    driver: local
-
+  dev-static-data:
