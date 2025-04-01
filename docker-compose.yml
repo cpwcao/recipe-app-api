@@ -25,6 +25,8 @@ services:
       - DB_PASSWORD=postgres
       - DB_NAME=recipe_db
       - DEV=True
+      # - SECRET_KEY=your_secret_key_here
+      - DEBUG=1
    
   db:
     image: postgres:13-alpine

@@ -3,7 +3,7 @@ LABEL maintainer="cpwcao <peiwei.cao@gmail.com>"
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
-    PATH="/py/bin:$PATH" \
+    PATH="/scripts:/py/bin:$PATH" \
     DEV="True"
 
 # Force update Alpine package index & keyring
@@ -30,6 +30,8 @@ RUN python -m venv /py && \
 # Copy requirements
 COPY ./app/requirements.txt /tmp/requirements.txt
 COPY ./app/requirements.dev.txt /tmp/requirements.dev.txt
+COPY ./scripts /scripts
+
 
 # Install dependencies
 RUN /py/bin/pip install --no-cache-dir -r /tmp/requirements.txt && \ 
@@ -45,10 +47,12 @@ COPY ./app /app
 RUN adduser --disabled-password --no-create-home django_user && \
     mkdir -p /vol/web/media /vol/web/static && \
     chown -R django_user:django_user /vol && \
-    chmod -R 755 /vol
+    chmod -R 755 /vol && \
+    chmod -R +x /scripts
 
 USER django_user
 
 EXPOSE 8000 
-
-CMD ["/py/bin/uwsgi", "--http", ":8000", "--module", "app.wsgi:application", "--workers=2", "--max-requests=500"]
+#["run.sh"] for uwsgi server
+CMD ["/py/bin/uwsgi", "--http", ":8000", "--module", "app.wsgi:application", "--workers=2", "--max-requests=500","run.sh"]
+ 

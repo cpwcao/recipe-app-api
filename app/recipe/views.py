@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.test import tag
 from django.db import transaction
+from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework import viewsets,generics,mixins,status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -11,10 +13,29 @@ from rest_framework.generics import  RetrieveAPIView
 from core.models import Recipe, Ingredient, Tag
 from recipe.serializers import (RecipeSerializer, RecipeDetailSerializer,IngredientSerializer,TagSerializer,
 RecipeImageSerializer)
-
+from drf_spectacular.utils import (extend_schema, 
+                                   extend_schema_view,
+                                   OpenApiParameter,
+                                   OpenApiTypes
+                            )
 
 # Create your views here.
-
+# @extend_schema_view(
+#     list=extend_schema(
+#         parameters=[
+#             OpenApiParameter(
+#                 name='ingredients',
+#                 description='A comma-separated list of ingredient IDs.',
+#                 type=OpenApiTypes.STR,
+#             ),
+#             OpenApiParameter(
+#                 name='tags',
+#                 description='A comma-separated list of tag IDs.',
+#                 type=OpenApiTypes.STR,
+#             ),
+#         ]
+#     )
+# )
 class RecipeViewSet(viewsets.ModelViewSet):
     """Manage recipes in the database"""
     serializer_class = RecipeSerializer
@@ -22,12 +43,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
     
+    def _params_to_ints(self,qs):
+        return [int(pk) for pk in qs.split(',') if pk.isdigit()]
+        
     def perform_update(self, serializer):
         """Override update to ensure update works properly"""
         serializer.save()
-        
+
     def get_queryset(self):
         """Retrieve recipes for the authenticated user"""
+        qs = self.request.query_params.get('ingredients',None)
+        if qs is not None:
+            qs = self._params_to_ints(qs)
+            recipe_ingredients = Ingredient.objects.filter(pk__in=qs)
+            self.queryset = self.queryset.filter(ingredients__in=recipe_ingredients)
+        qs =self.request.query_params.get('tags',None)
+        if qs is not None:
+            qs = self._params_to_ints(qs)
+            recipe_tags = Tag.objects.filter(pk__in=qs)
+            self.queryset = self.queryset.filter(tags__in=recipe_tags)
         return self.queryset.filter(user=self.request.user).order_by('-id')
     
     def get_serializer_class(self):
@@ -59,6 +93,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='ingredients',
+                description='A comma-separated list of ingredient IDs.',
+                type=OpenApiTypes.STR),
+            OpenApiParameter(
+                name='tags',
+                description='A comma-separated list of tag IDs.',
+                type=OpenApiTypes.STR)
+        ]),
+    ) 
 # class RecipeDetail(RetrieveAPIView):
 class RecipeDetail(generics.RetrieveUpdateAPIView):
     """Retrieve a recipe by ID"""
@@ -69,9 +116,22 @@ class RecipeDetail(generics.RetrieveUpdateAPIView):
     lookup_field = 'id'
     lookup_url_kwarg = 'pk' 
 
+    def _params_to_ints(self,qs):
+        """Convert a list of string IDs to a list of integers"""
+        return [int(str_id) for str_id in qs.split(',')]
+    
     def get_queryset(self):
         """Filter recipes by the authenticated user"""
-        return self.queryset.filter(user=self.request.user)
+        queryset = self.queryset.filter(user=self.request.user)
+        qs_params = self.request.query_params.get('ingredients', None)
+        if qs_params is not None:
+            queryset = queryset.filter(ingredients__id__in=self._params_to_ints(qs_params))
+        qs_params = self.request.query_params.get('tags', None)
+        if qs_params is not None:
+            queryset = queryset.filter(tags__id__in=self._params_to_ints(qs_params))
+        return queryset 
+        
+    
     
     def perform_update(self, serializer): 
         serializer.save(user=self.request.user)
@@ -83,6 +143,8 @@ class RecipeList(generics.ListAPIView):
     queryset = Recipe.objects.all()
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['title', 'ingredients', 'tags__name']  # Filter by title, author, and tag names
     
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user).order_by('-id')
